@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pangaea-readiness"
+version = "0.1.0"
+description = "Evaluate PANGAEA earth science datasets for ML/DS readiness"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = [
+    "pangaea",
+    "earth science",
+    "machine learning",
+    "data science",
+    "dataset evaluation",
+    "open science"
+]
+authors = [
+    { name = "Floriann Deepika Louis", email = "florianndeepika@gmail.com" }
+]
+dependencies = [
+    "pangaeapy",
+    "pandas",
+    "numpy",
+    "openai",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "jupyter",
+]
+app = [
+    "streamlit",
+]
+api = [
+    "fastapi",
+    "uvicorn[standard]",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/yourusername/pangaea-readiness"
+Repository = "https://github.com/yourusername/pangaea-readiness"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pangaea_readiness"]

@@ -1,0 +1,114 @@
+pangaea-readiness/
+│
+├── pangaea_readiness/          # Python library (installable)
+│   ├── __init__.py
+│   ├── fetcher.py              # pangaeapy wrapper
+│   ├── profiler.py             # statistical profiling
+│   ├── scorer.py               # rule-based scoring
+│   ├── ai_evaluator.py         # Claude API evaluator
+│   └── reporter.py             # output formatter
+│
+├── app/                        # Web app (Streamlit)
+│   └── main.py
+│
+├── notebooks/
+│   └── exploration.ipynb
+│
+├── tests/
+│   └── test_scorer.py
+│
+├── pyproject.toml              # packaging
+├── requirements.txt
+└── README.md
+
+
+
+Day-by-Day Breakdown
+
+Day 1 — Setup + Data Fetching
+Goal: Get PANGAEA data flowing into Python cleanly
+Tasks:
+
+Set up project structure in Cursor
+Install dependencies
+Build fetcher.py — wraps pangaeapy, handles errors, embargoed datasets, rate limiting
+Build profiler.py — extracts shape, dtypes, missing %, numeric ratio, temporal/spatial keys
+Test on 5–10 real PANGAEA DOIs
+
+Deliverable: fetcher.py + profiler.py working
+
+Day 2 — Rule-Based Scorer
+Goal: Implement the scoring criteria we defined
+Tasks:
+
+Build scorer.py with all 7 criteria categories
+Weighted scoring system (0–100)
+Output: score + flag + per-criterion breakdown
+Unit tests in tests/
+
+Deliverable: scorer.py returning structured results
+
+Day 3 — AI Evaluator
+Goal: Add Claude API for intelligent metadata interpretation
+Tasks:
+
+Build ai_evaluator.py using Claude API
+Analyze title, abstract, column names intelligently
+Detect implied ML task type (classification, regression, clustering, time series)
+Combine rule score + AI score into final verdict
+
+Deliverable: ai_evaluator.py working end-to-end
+
+Day 4 — Reporter + Library Packaging
+Goal: Clean output + installable package
+Tasks:
+
+Build reporter.py — structured JSON + human-readable report
+Wire everything together in __init__.py
+Set up pyproject.toml for packaging
+Test pip install -e . locally
+
+Deliverable: pangaea_readiness importable as a library
+python# Should work like this by end of Day 4
+from pangaea_readiness import evaluate
+
+result = evaluate("10.1594/PANGAEA.787140")
+print(result.flag)       # ✅ ML Ready
+print(result.score)      # 82/100
+print(result.ml_tasks)   # ['regression', 'time_series']
+print(result.report)     # Full breakdown
+
+Day 5 — Streamlit Web App
+Goal: Simple, clean web interface
+Tasks:
+
+Build app/main.py with Streamlit
+Input: PANGAEA DOI or URL
+Output: visual score card, criteria breakdown, ML task suggestions
+Add progress bar while evaluating
+Basic styling
+
+Deliverable: Web app running locally
+
+Day 6 — Testing + Polish
+Goal: Make it robust and reliable
+Tasks:
+
+Test on 20–30 diverse PANGAEA datasets
+Handle edge cases (embargoed, empty, malformed)
+Improve scoring weights based on results
+Polish web app UI
+Write docstrings
+
+Deliverable: Stable, tested version
+
+Day 7 — Documentation + GitHub
+Goal: Ship it publicly
+Tasks:
+
+Write README.md with examples, badges, screenshots
+Add usage examples to notebooks/
+Push to GitHub with proper .gitignore
+Tag v0.1.0 release
+
+Deliverable: Public GitHub repo 🎉

@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PANGAEA ML Readiness Checker</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f0f4f8;
+        color: #1a202c;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+      }
+
+      header p {
+        color: #4a5568;
+        margin-top: 0.5rem;
+        font-size: 1rem;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .input-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.75rem 1rem;
+        border: 1.5px solid #cbd5e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      input[type="text"]:focus {
+        border-color: #4299e1;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+        color: #4a5568;
+      }
+
+      toggle-row input {
+        cursor: pointer;
+      }
+
+      button {
+        padding: 0.75rem 1.5rem;
+        background: #3182ce;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+      }
+
+      button:hover {
+        background: #2b6cb0;
+      }
+      button:disabled {
+        background: #a0aec0;
+        cursor: not-allowed;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .spinner {
+        text-align: center;
+        padding: 2rem;
+        color: #4a5568;
+        font-size: 1rem;
+      }
+
+      .spinner::after {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #cbd5e0;
+        border-top-color: #3182ce;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error-box {
+        background: #fff5f5;
+        border: 1px solid #fc8181;
+        border-radius: 8px;
+        padding: 1rem;
+        color: #c53030;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .metric {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+      }
+
+      .metric .value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2d3748;
+      }
+
+      .metric .label {
+        font-size: 0.8rem;
+        color: #718096;
+        margin-top: 0.25rem;
+      }
+
+      .flag {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .flag-ready {
+        background: #f0fff4;
+        color: #276749;
+      }
+      .flag-warning {
+        background: #fffaf0;
+        color: #744210;
+      }
+      .flag-error {
+        background: #fff5f5;
+        color: #c53030;
+      }
+      .flag-locked {
+        background: #f7fafc;
+        color: #4a5568;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #2d3748;
+      }
+
+      .breakdown-item {
+        margin-bottom: 0.75rem;
+      }
+
+      .breakdown-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: #edf2f7;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.6s ease;
+      }
+
+      .fill-green {
+        background: #48bb78;
+      }
+      .fill-yellow {
+        background: #ecc94b;
+      }
+      .fill-red {
+        background: #fc8181;
+      }
+
+      .tasks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .tag {
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 500;
+      }
+
+      .tag-blue {
+        background: #ebf8ff;
+        color: #2b6cb0;
+      }
+      .tag-green {
+        background: #f0fff4;
+        color: #276749;
+      }
+      .tag-red {
+        background: #fff5f5;
+        color: #c53030;
+      }
+      .tag-purple {
+        background: #faf5ff;
+        color: #553c9a;
+      }
+
+      .warning-item {
+        background: #fffaf0;
+        border-left: 3px solid #ecc94b;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0 6px 6px 0;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #744210;
+      }
+
+      .rec-item {
+        background: #ebf8ff;
+        border-left: 3px solid #4299e1;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0 6px 6px 0;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #2b6cb0;
+      }
+
+      .ai-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .ai-metric {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+      }
+
+      .ai-metric .ai-label {
+        font-size: 0.75rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .ai-metric .ai-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-top: 0.2rem;
+      }
+
+      .suitability {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 0.9rem;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+
+      footer {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #a0aec0;
+        margin-top: 2rem;
+      }
+
+      footer a {
+        color: #4299e1;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🌊 PANGAEA ML Readiness</h1>
+        <p>
+          Evaluate any PANGAEA dataset for Machine Learning and Data Science
+          suitability
+        </p>
+      </header>
+
+      <!-- Input card -->
+      <div class="card">
+        <div class="input-row">
+          <input
+            type="text"
+            id="doi-input"
+            placeholder="e.g. 10.1594/PANGAEA.787140 or 787140"
+            onkeydown="if (event.key === 'Enter') evaluate();"
+          />
+          <button id="eval-btn" onclick="evaluate()">🔍 Evaluate</button>
+        </div>
+        <div class="toggle-row">
+          <input type="checkbox" id="use-ai" checked />
+          <label for="use-ai">Enable AI evaluation (SAIA/Mistral)</label>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="card hidden">
+        <div class="spinner">Fetching and evaluating dataset from PANGAEA</div>
+      </div>
+
+      <!-- Error -->
+      <div id="error-box" class="card hidden">
+        <div class="error-box" id="error-msg"></div>
+      </div>
+
+      <!-- Results -->
+      <div id="results" class="hidden">
+        <!-- Dataset info -->
+        <div class="card">
+          <div class="metrics">
+            <div class="metric">
+              <div class="value" id="r-score">—</div>
+              <div class="label">Score / 100</div>
+            </div>
+            <div class="metric">
+              <div class="value" id="r-rows">—</div>
+              <div class="label">Rows</div>
+            </div>
+            <div class="metric">
+              <div class="value" id="r-cols">—</div>
+              <div class="label">Columns</div>
+            </div>
+          </div>
+          <div class="flag" id="r-flag"></div>
+          <div style="font-size: 0.85rem; color: #718096">
+            <strong id="r-title"></strong><br />
+            <span id="r-doi"></span>
+          </div>
+        </div>
+
+        <!-- Breakdown -->
+        <div class="card">
+          <h2>📊 Score Breakdown</h2>
+          <div id="r-breakdown"></div>
+        </div>
+
+        <!-- ML Tasks -->
+        <div class="card" id="tasks-card">
+          <h2>🤖 Suggested ML Tasks</h2>
+          <div class="tasks" id="r-tasks"></div>
+        </div>
+
+        <!-- Warnings -->
+        <div class="card" id="warnings-card">
+          <h2>⚠️ Warnings</h2>
+          <div id="r-warnings"></div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="card" id="recs-card">
+          <h2>💡 Recommendations</h2>
+          <div id="r-recs"></div>
+        </div>
+
+        <!-- AI Evaluation -->
+        <div class="card" id="ai-card">
+          <h2>🧠 AI Evaluation</h2>
+          <div class="ai-grid">
+            <div class="ai-metric">
+              <div class="ai-label">Scientific Domain</div>
+              <div class="ai-value" id="r-ai-domain">—</div>
+            </div>
+            <div class="ai-metric">
+              <div class="ai-label">AI Confidence</div>
+              <div class="ai-value" id="r-ai-confidence">—</div>
+            </div>
+          </div>
+          <div class="suitability" id="r-ai-suitability"></div>
+          <div style="margin-bottom: 0.75rem">
+            <strong style="font-size: 0.9rem">ML Tasks (AI):</strong>
+            <div
+              class="tasks"
+              style="margin-top: 0.5rem"
+              id="r-ai-ml-tasks"
+            ></div>
+          </div>
+          <div style="margin-bottom: 0.75rem">
+            <strong style="font-size: 0.9rem">DS Tasks:</strong>
+            <div
+              class="tasks"
+              style="margin-top: 0.5rem"
+              id="r-ai-ds-tasks"
+            ></div>
+          </div>
+          <div class="ai-grid" style="margin-top: 1rem">
+            <div>
+              <strong style="font-size: 0.9rem">🚩 Red Flags:</strong>
+              <div id="r-ai-flags" style="margin-top: 0.5rem"></div>
+            </div>
+            <div>
+              <strong style="font-size: 0.9rem">💡 Opportunities:</strong>
+              <div id="r-ai-opps" style="margin-top: 0.5rem"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /results -->
+
+      <footer>
+        Data via
+        <a href="https://www.pangaea.de" target="_blank">PANGAEA</a> &amp;
+        <a
+          href="https://github.com/pangaea-data-publisher/pangaeapy"
+          target="_blank"
+          >pangaeapy</a
+        >
+        · AI via
+        <a
+          href="https://docs.hpc.gwdg.de/services/ai-services/saia/"
+          target="_blank"
+          >SAIA/Mistral</a
+        >
+        · Built for open science 🌍
+      </footer>
+    </div>
+
+    <script>
+      // ── API endpoint (override with ?api=http://host:port) ──
+      const API_URL =
+        new URLSearchParams(window.location.search).get("api") ||
+        "http://localhost:8000";
+
+      async function evaluate() {
+        const doi = document.getElementById("doi-input").value.trim();
+        const use_ai = document.getElementById("use-ai").checked;
+
+        if (!doi) return;
+
+        // Reset UI
+        hide("results");
+        hide("error-box");
+        show("loading");
+        document.getElementById("eval-btn").disabled = true;
+
+        try {
+          const res = await fetch(`${API_URL}/evaluate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ doi, use_ai }),
+          });
+
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Evaluation failed");
+          }
+
+          const data = await res.json();
+          renderResults(data);
+          hide("loading");
+          show("results");
+        } catch (err) {
+          hide("loading");
+          document.getElementById("error-msg").textContent =
+            `❌ ${err.message}`;
+          show("error-box");
+        } finally {
+          document.getElementById("eval-btn").disabled = false;
+        }
+      }
+
+      function renderResults(d) {
+        // Metrics
+        document.getElementById("r-score").textContent = d.score;
+        document.getElementById("r-rows").textContent =
+          d.shape[0].toLocaleString();
+        document.getElementById("r-cols").textContent = d.shape[1];
+        document.getElementById("r-title").textContent = d.title;
+        document.getElementById("r-doi").textContent = d.doi;
+
+        // Flag
+        const flagEl = document.getElementById("r-flag");
+        flagEl.textContent = d.flag;
+        flagEl.className = "flag " + flagClass(d.flag);
+
+        // Breakdown
+        const bd = document.getElementById("r-breakdown");
+        bd.innerHTML = Object.entries(d.breakdown)
+          .map(([key, val]) => {
+            const pct = (val.score / val.max) * 100;
+            const color =
+              pct >= 75 ? "fill-green" : pct >= 50 ? "fill-yellow" : "fill-red";
+            const label = key
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+            return `
+        <div class="breakdown-item">
+          <div class="breakdown-header">
+            <span>${val.verdict} ${label}</span>
+            <span style="color:#718096">${val.score}/${val.max} — ${val.detail}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill ${color}" style="width:${pct}%"></div>
+          </div>
+        </div>`;
+          })
+          .join("");
+
+        // ML Tasks
+        const tasksEl = document.getElementById("r-tasks");
+        if (d.ml_tasks.length) {
+          tasksEl.innerHTML = d.ml_tasks
+            .map(
+              (t) =>
+                `<span class="tag tag-blue">${t.replace(/_/g, " ")}</span>`,
+            )
+            .join("");
+          show("tasks-card");
+        } else {
+          hide("tasks-card");
+        }
+
+        // Warnings
+        const warnEl = document.getElementById("r-warnings");
+        if (d.warnings.length) {
+          warnEl.innerHTML = d.warnings
+            .map((w) => `<div class="warning-item">⚠️ ${w}</div>`)
+            .join("");
+          show("warnings-card");
+        } else {
+          hide("warnings-card");
+        }
+
+        // Recommendations
+        const recEl = document.getElementById("r-recs");
+        if (d.recommendations.length) {
+          recEl.innerHTML = d.recommendations
+            .map((r) => `<div class="rec-item">💡 ${r}</div>`)
+            .join("");
+          show("recs-card");
+        } else {
+          hide("recs-card");
+        }
+
+        // AI Evaluation
+        if (d.ai_domain) {
+          document.getElementById("r-ai-domain").textContent = d.ai_domain;
+          document.getElementById("r-ai-confidence").textContent =
+            d.ai_confidence;
+          document.getElementById("r-ai-suitability").textContent =
+            d.ai_suitability;
+
+          document.getElementById("r-ai-ml-tasks").innerHTML = d.ai_ml_tasks
+            .map((t) => `<span class="tag tag-green">${t}</span>`)
+            .join("");
+
+          document.getElementById("r-ai-ds-tasks").innerHTML = d.ai_ds_tasks
+            .map((t) => `<span class="tag tag-purple">${t}</span>`)
+            .join("");
+
+          document.getElementById("r-ai-flags").innerHTML = d.ai_red_flags
+            .map((f) => `<div class="warning-item">${f}</div>`)
+            .join("");
+
+          document.getElementById("r-ai-opps").innerHTML = d.ai_opportunities
+            .map((o) => `<div class="rec-item">${o}</div>`)
+            .join("");
+
+          show("ai-card");
+        } else {
+          hide("ai-card");
+        }
+      }
+
+      function flagClass(flag) {
+        if (flag.includes("✅")) return "flag-ready";
+        if (flag.includes("⚠️")) return "flag-warning";
+        if (flag.includes("🔒")) return "flag-locked";
+        return "flag-error";
+      }
+
+      function show(id) {
+        document.getElementById(id).classList.remove("hidden");
+      }
+      function hide(id) {
+        document.getElementById(id).classList.add("hidden");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+# Kept in sync with pyproject.toml [project] dependencies
+pangaeapy
+pandas
+numpy
+openai
+python-dotenv
+
+# App (optional)
+streamlit
+
+# Dev (optional)
+pytest
+hatchling
