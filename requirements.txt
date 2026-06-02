@@ -24,7 +24,6 @@ netcdf4==1.7.4
 numpy==2.4.6
 openai==2.40.0
 pandas==3.0.3
--e file:///Users/flloui001/Desktop/hobby_project
 pangaeapy==1.1.0
 propcache==0.5.2
 pydantic==2.13.4
