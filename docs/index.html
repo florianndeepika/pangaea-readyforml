@@ -487,7 +487,7 @@
       // ── API endpoint (override with ?api=http://host:port) ──
       const API_URL =
         new URLSearchParams(window.location.search).get("api") ||
-        "http://localhost:8000";
+        "https://pangaea-readyforml.onrender.com";
 
       async function evaluate() {
         const doi = document.getElementById("doi-input").value.trim();
