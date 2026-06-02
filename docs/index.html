@@ -352,9 +352,9 @@
             type="text"
             id="doi-input"
             placeholder="e.g. 10.1594/PANGAEA.787140 or 787140"
-            onkeydown="if (event.key === 'Enter') evaluate();"
+            onkeydown="if (event.key === 'Enter') runEvaluation();"
           />
-          <button id="eval-btn" onclick="evaluate()">🔍 Evaluate</button>
+          <button id="eval-btn" onclick="runEvaluation()">🔍 Evaluate</button>
         </div>
         <div class="toggle-row">
           <input type="checkbox" id="use-ai" checked />
@@ -489,7 +489,7 @@
         new URLSearchParams(window.location.search).get("api") ||
         "https://pangaea-readyforml.onrender.com";
 
-      async function evaluate() {
+      async function runEvaluation() {
         const doi = document.getElementById("doi-input").value.trim();
         const use_ai = document.getElementById("use-ai").checked;
 
